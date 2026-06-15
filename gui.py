@@ -227,10 +227,23 @@ class SchedulerGUI(tk.Tk):
         # --- Compare tab ---
         compare = ttk.Frame(notebook, style="Card.TFrame", padding=12)
         notebook.add(compare, text="  Compare  ")
-        self.compare_fig = Figure(figsize=(7, 4.5), dpi=100)
+        self.compare_fig = Figure(figsize=(7, 3.6), dpi=100)
         self._style_figure(self.compare_fig)
         self.compare_canvas = FigureCanvasTkAgg(self.compare_fig, master=compare)
         self.compare_canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.compare_best_var = tk.StringVar(
+            value="Run “Compare All Algorithms” to see a summary.")
+        ttk.Label(compare, textvariable=self.compare_best_var, style="Metric.TLabel").pack(
+            anchor="w", pady=(10, 4))
+
+        summary_cols = ("Algorithm", "Avg Waiting", "Avg Turnaround", "Avg Response")
+        self.compare_tree = ttk.Treeview(compare, columns=summary_cols, show="headings", height=5)
+        for c in summary_cols:
+            self.compare_tree.heading(c, text=c)
+            self.compare_tree.column(c, width=120, anchor="center")
+        self.compare_tree.pack(fill="x")
+
         self.notebook = notebook
 
     # ------------------------------------------------------------------ #
@@ -375,7 +388,19 @@ class SchedulerGUI(tk.Tk):
         self.compare_fig.tight_layout()
         self.compare_canvas.draw()
 
+        self.compare_tree.delete(*self.compare_tree.get_children())
+        for r in results:
+            self.compare_tree.insert("", "end", values=(
+                r.algorithm,
+                f"{r.avg_waiting_time:.2f}",
+                f"{r.avg_turnaround_time:.2f}",
+                f"{r.avg_response_time:.2f}",
+            ))
+
         best = min(results, key=lambda r: r.avg_waiting_time)
+        self.compare_best_var.set(
+            f"Best: {best.algorithm}  (lowest avg waiting time: {best.avg_waiting_time:.2f})"
+        )
         self._set_status(f"Compared all. Lowest avg waiting: {best.algorithm}.")
 
     def _export_csv(self) -> None:

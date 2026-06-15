@@ -97,6 +97,11 @@ def render_gantt(ax, result: ScheduleResult) -> None:
     ax.set_xlabel("Time")
     ax.set_title(f"{result.algorithm} - Gantt Chart")
 
+    # Tick every boundary so each segment's start/end time is labelled.
+    boundaries = sorted({seg.start for seg in result.gantt} | {seg.end for seg in result.gantt})
+    ax.set_xticks(boundaries)
+    ax.set_xlim(boundaries[0], boundaries[-1])
+
 
 def plot_gantt(result: ScheduleResult) -> None:
     """Open a standalone matplotlib window with ``result``'s Gantt chart."""
